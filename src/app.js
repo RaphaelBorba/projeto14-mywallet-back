@@ -30,11 +30,9 @@ app.post('/sing_up', async (req, res)=>{
 
     const validate = vSingUp.validate(body, {abortEarly: false})
 
-    console.log(validate)
-
     if(validate.error){
         const errors = validate.error.details.map((detail) => detail.message)
-        return res.status(409).send(errors)
+        return res.status(400).send(errors)
     }
 
     try {
@@ -44,8 +42,10 @@ app.post('/sing_up', async (req, res)=>{
             return res.status(409).send({message: 'Esse email já está cadastrado!'})
         }
 
-        await users.insertOne(body)
+        const hashPassword = bcrypt.hashSync(body.password, 10)
 
+        await users.insertOne({...body, password: hashPassword})
+        
         res.sendStatus(201)
 
 
