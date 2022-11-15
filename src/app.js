@@ -64,6 +64,10 @@ app.post('/sing_in', async (req, res)=>{
 
     const user = await users.findOne({email: body.email})
 
+    if(!user){
+        return res.status(400).send({message:'Email não encontrado'})
+    }
+
     try {
         if(user && bcrypt.compareSync(body.password, user.password)){
         
@@ -74,9 +78,9 @@ app.post('/sing_in', async (req, res)=>{
                 token
             })
     
-            res.send(token)
+            res.status(200).send(token)
         }else{
-            res.status(400).send({message:'Usuário não encontrado'})
+            res.status(400).send({message:'Senha errada'})
         }
     } catch (error) {
         console.log(error)
