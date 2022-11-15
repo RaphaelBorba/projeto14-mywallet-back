@@ -3,6 +3,7 @@ import { MongoClient } from 'mongodb'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import bcrypt from 'bcrypt'
+import { vSingUp } from './schemas.js'
 
 dotenv.config()
 
@@ -20,7 +21,39 @@ try {
 
 const db = mongoClient.db('my_wallet')
 
+const users = db.collection('users')
 
+
+app.post('/sing_up', async (req, res)=>{
+
+    const body = req.body
+
+    const validate = vSingUp.validate(body, {abortEarly: false})
+
+    console.log(validate)
+
+    if(validate.error){
+        const errors = validate.error.details.map((detail) => detail.message)
+        return res.status(409).send(errors)
+    }
+
+    try {
+        const existUser= await users.findOne({email: body.email})
+
+        if(existUser){
+            return res.status(409).send({message: 'Esse email já está cadastrado!'})
+        }
+
+        await users.insertOne(body)
+
+        res.sendStatus(201)
+
+
+    } catch (error) {
+        console.log(error)
+        res.sendStatus(500)
+    }
+})
 
 
 
