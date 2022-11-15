@@ -4,6 +4,7 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import bcrypt from 'bcrypt'
 import { vSingUp } from './schemas.js'
+import {v4 as uuid} from 'uuid'
 
 dotenv.config()
 
@@ -22,6 +23,8 @@ try {
 const db = mongoClient.db('my_wallet')
 
 const users = db.collection('users')
+
+const session = db.collection('session')
 
 
 app.post('/sing_up', async (req, res)=>{
@@ -53,6 +56,35 @@ app.post('/sing_up', async (req, res)=>{
         console.log(error)
         res.sendStatus(500)
     }
+})
+
+app.post('/sing_in', async (req, res)=>{
+
+    const body = req.body
+
+    const user = await users.findOne({email: body.email})
+
+    try {
+        if(user && bcrypt.compareSync(body.password, user.password)){
+        
+            const token = uuid()
+    
+            await session.insertOne({
+                userId: user._id,
+                token
+            })
+    
+            res.send(token)
+        }else{
+            res.status(400).send({message:'Usuário não encontrado'})
+        }
+    } catch (error) {
+        console.log(error)
+        res.sendStatus(500)
+    }
+
+    
+
 })
 
 
