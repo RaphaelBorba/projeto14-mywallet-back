@@ -1,5 +1,5 @@
 import express from 'express'
-import { MongoClient } from 'mongodb'
+import { MongoClient, ObjectId } from 'mongodb'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import bcrypt from 'bcrypt'
@@ -93,7 +93,7 @@ app.post('/sing_in', async (req, res) => {
 
 })
 // TROCAR PARA ACHAR COM userID
-app.get('/home', async (req, res) => {
+app.get('/recipes', async (req, res) => {
 
     const { authorization } = req.headers;
     const token = authorization?.replace('Bearer ', '');
@@ -110,17 +110,11 @@ app.get('/home', async (req, res) => {
 
     console.log(sessionUser)
 
-    const user = await users.findOne({_id: sessionUser.userId})
-
-    if (!user) return res.status(401).send('Usuário não encontrado');
-
-    console.log(user)
-
     try {
 
-        const recipesUser = await recipes.find({name: user.name}).toArray()
+        const recipesUser = await recipes.find({userId: ObjectId(sessionUser.userId) }).toArray()
 
-        res.status(200).send(sessionUser)
+        res.status(200).send(recipesUser)
 
     } catch (error) {
         console.log(error)
@@ -128,8 +122,6 @@ app.get('/home', async (req, res) => {
     }
 
 })
-
-// COlOCAR DATA E userID
 
 app.post('/recipes', async (req,res)=>{
 
@@ -154,11 +146,11 @@ app.post('/recipes', async (req,res)=>{
         return res.status(401).send('Sessão do usuário não encontrado');
     }
 
-    console.log(sessionUser)
+    var date = new Date();
 
     try {
         
-        await recipes.insertOne({...body, userId: sessionUser.userId})
+        await recipes.insertOne({...body, userId: sessionUser.userId, date: date.toLocaleDateString()})
 
         res.sendStatus(201)
 
