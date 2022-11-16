@@ -3,7 +3,7 @@ import { MongoClient } from 'mongodb'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import bcrypt from 'bcrypt'
-import { vSingUp } from './schemas.js'
+import { vRecipes, vSingUp } from './schemas.js'
 import { v4 as uuid } from 'uuid'
 
 dotenv.config()
@@ -110,14 +110,49 @@ app.get('/home', async (req, res) => {
 
     console.log(sessionUser)
 
+    const user = await users.findOne({_id: sessionUser.userId})
+
+    if (!user) return res.status(401).send('Usuário não encontrado');
+
+    console.log(user)
 
     try {
-        const recipesUser = recipes.find({userId: sessionUser.userId})
 
-        res.status(200).send(recipesUser)
+        const recipesUser = await recipes.find({name: user.name}).toArray()
+
+        res.status(200).send(sessionUser)
+
     } catch (error) {
+        console.log(error)
         res.sendStatus(500)
     }
+
+})
+
+app.post('/recipes', async (req,res)=>{
+
+    const { authorization } = req.headers;
+    const token = authorization?.replace('Bearer ', '');
+    const body = req.body
+
+    const validate = vRecipes.validate(body)
+
+    if (validate.error) {
+        const errors = validate.error.details.map((detail) => detail.message)
+        return res.status(400).send(errors)
+    }
+
+    if (!token) {
+        return res.status(401).send('Token não encontrado')
+    }
+
+    const sessionUser = await session.findOne({ token })
+
+    if (!sessionUser) {
+        return res.status(401).send('Sessão do usuário não encontrado');
+    }
+
+    res.send(sessionUser)
 
 })
 
