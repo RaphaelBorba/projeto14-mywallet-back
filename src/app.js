@@ -92,7 +92,7 @@ app.post('/sing_in', async (req, res) => {
 
 
 })
-
+// TROCAR PARA ACHAR COM userID
 app.get('/home', async (req, res) => {
 
     const { authorization } = req.headers;
@@ -129,6 +129,8 @@ app.get('/home', async (req, res) => {
 
 })
 
+// COlOCAR DATA E userID
+
 app.post('/recipes', async (req,res)=>{
 
     const { authorization } = req.headers;
@@ -152,7 +154,18 @@ app.post('/recipes', async (req,res)=>{
         return res.status(401).send('Sessão do usuário não encontrado');
     }
 
-    res.send(sessionUser)
+    console.log(sessionUser)
+
+    try {
+        
+        await recipes.insertOne({...body, userId: sessionUser.userId})
+
+        res.sendStatus(201)
+
+    } catch (error) {
+        console.log(error)
+        res.sendStatus(500)
+    }
 
 })
 
