@@ -1,10 +1,9 @@
 import express from 'express'
-import { MongoClient, ObjectId } from 'mongodb'
+import { MongoClient } from 'mongodb'
 import cors from 'cors'
 import dotenv from 'dotenv'
-import bcrypt from 'bcrypt'
-import { vRecipes, vSingUp } from './schemas.js'
-import { v4 as uuid } from 'uuid'
+import {userSingUp, userSingIn} from './Controllers/usersController.js'
+import {getRecipes, postRecipes} from './Controllers/recipesControllers.js'
 
 dotenv.config()
 
@@ -22,144 +21,20 @@ try {
 
 const db = mongoClient.db('my_wallet')
 
-const users = db.collection('users')
+export const users = db.collection('users')
 
-const session = db.collection('session')
+export const session = db.collection('session')
 
-const recipes = db.collection('recipes')
-
-
-app.post('/sing_up', async (req, res) => {
-
-    const body = req.body
-
-    const validate = vSingUp.validate(body, { abortEarly: false })
-
-    if (validate.error) {
-        const errors = validate.error.details.map((detail) => detail.message)
-        return res.status(400).send(errors)
-    }
-
-    try {
-        const existUser = await users.findOne({ email: body.email })
-
-        if (existUser) {
-            return res.status(409).send({ message: 'Esse email já está cadastrado!' })
-        }
-
-        const hashPassword = bcrypt.hashSync(body.password, 10)
-
-        await users.insertOne({ ...body, password: hashPassword })
-
-        res.sendStatus(201)
+export const recipes = db.collection('recipes')
 
 
-    } catch (error) {
-        console.log(error)
-        res.sendStatus(500)
-    }
-})
+app.post('/sing_up', userSingUp )
 
-app.post('/sing_in', async (req, res) => {
+app.post('/sing_in', userSingIn)
 
-    const body = req.body
+app.get('/recipes', getRecipes)
 
-    const user = await users.findOne({ email: body.email })
-
-    if (!user) {
-        return res.status(400).send({ message: 'Email não encontrado' })
-    }
-
-    try {
-        if (user && bcrypt.compareSync(body.password, user.password)) {
-
-            const token = uuid()
-
-            await session.insertOne({
-                userId: user._id,
-                token
-            })
-
-            res.status(200).send({ token, name: user.name })
-        } else {
-            res.status(400).send({ message: 'Senha errada' })
-        }
-    } catch (error) {
-        console.log(error)
-        res.sendStatus(500)
-    }
-
-
-
-})
-// TROCAR PARA ACHAR COM userID
-app.get('/recipes', async (req, res) => {
-
-    const { authorization } = req.headers;
-    const token = authorization?.replace('Bearer ', '');
-
-    if (!token) {
-        return res.status(401).send('Token não encontrado')
-    }
-
-    const sessionUser = await session.findOne({ token })
-
-    if (!sessionUser) {
-        return res.status(401).send('Sessão do usuário não encontrado');
-    }
-
-    console.log(sessionUser)
-
-    try {
-
-        const recipesUser = await recipes.find({userId: ObjectId(sessionUser.userId) }).toArray()
-
-        res.status(200).send(recipesUser)
-
-    } catch (error) {
-        console.log(error)
-        res.sendStatus(500)
-    }
-
-})
-
-app.post('/recipes', async (req,res)=>{
-
-    const { authorization } = req.headers;
-    const token = authorization?.replace('Bearer ', '');
-    const body = req.body
-
-    const validate = vRecipes.validate(body)
-
-    if (validate.error) {
-        const errors = validate.error.details.map((detail) => detail.message)
-        return res.status(400).send(errors)
-    }
-
-    if (!token) {
-        return res.status(401).send('Token não encontrado')
-    }
-
-    const sessionUser = await session.findOne({ token })
-
-    if (!sessionUser) {
-        return res.status(401).send('Sessão do usuário não encontrado');
-    }
-
-    var date = new Date();
-
-    try {
-        
-        await recipes.insertOne({...body, userId: sessionUser.userId, date: date.toLocaleDateString()})
-
-        res.sendStatus(201)
-
-    } catch (error) {
-        console.log(error)
-        res.sendStatus(500)
-    }
-
-})
+app.post('/recipes', postRecipes)
 
 
 app.listen(5000, () => console.log('Server on 5000:'))
