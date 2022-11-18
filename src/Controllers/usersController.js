@@ -1,5 +1,5 @@
 import { vSingUp } from "../schemas.js"
-import { users, session } from "../app.js"
+import { users, session } from "../Database/db.js"
 import bcrypt from 'bcrypt'
 import { v4 as uuid } from 'uuid'
 
