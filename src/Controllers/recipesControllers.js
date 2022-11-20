@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { session, recipes } from "../Database/db.js";
+import { recipes } from "../Database/db.js";
 import { vRecipes } from '../schemas.js'
 
 
@@ -23,6 +23,7 @@ export async function getRecipes(req, res){
 export async function postRecipes(req,res){
 
     const body = req.body
+    const sessionUser= req.message
 
     const validate = vRecipes.validate(body)
 
