@@ -5,20 +5,7 @@ import { vRecipes } from '../schemas.js'
 
 export async function getRecipes(req, res){
 
-    const { authorization } = req.headers;
-    const token = authorization?.replace('Bearer ', '');
-
-    if (!token) {
-        return res.status(401).send('Token não encontrado')
-    }
-
-    const sessionUser = await session.findOne({ token })
-
-    if (!sessionUser) {
-        return res.status(401).send('Sessão do usuário não encontrado');
-    }
-
-    console.log(sessionUser)
+    const sessionUser= req.message
 
     try {
 
@@ -35,8 +22,6 @@ export async function getRecipes(req, res){
 
 export async function postRecipes(req,res){
 
-    const { authorization } = req.headers;
-    const token = authorization?.replace('Bearer ', '');
     const body = req.body
 
     const validate = vRecipes.validate(body)
@@ -45,17 +30,6 @@ export async function postRecipes(req,res){
         const errors = validate.error.details.map((detail) => detail.message)
         return res.status(400).send(errors)
     }
-
-    if (!token) {
-        return res.status(401).send('Token não encontrado')
-    }
-
-    const sessionUser = await session.findOne({ token })
-
-    if (!sessionUser) {
-        return res.status(401).send('Sessão do usuário não encontrado');
-    }
-
     var date = new Date();
 
     try {
