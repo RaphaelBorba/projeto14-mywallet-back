@@ -45,3 +45,21 @@ export async function postRecipes(req,res){
     }
 
 }
+
+export async function deleteRecipes(req, res){
+
+    const {id} = req.params
+
+    console.log(id)
+
+    try {
+
+        await recipes.deleteOne({_id: ObjectId(id)})
+
+        res.send('deletou')
+        
+    } catch (error) {
+        console.log(error)
+        res.sendStatus(500)
+    }
+}
