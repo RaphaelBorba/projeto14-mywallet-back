@@ -50,13 +50,31 @@ export async function deleteRecipes(req, res){
 
     const {id} = req.params
 
-    console.log(id)
-
     try {
 
         await recipes.deleteOne({_id: ObjectId(id)})
 
         res.send('deletou')
+        
+    } catch (error) {
+        console.log(error)
+        res.sendStatus(500)
+    }
+}
+
+export async function putRecipe(req, res){
+
+    const {id} = req.params
+    const body = req.body
+
+    try {
+
+        await recipes.updateOne({_id: ObjectId(id)}, {$set: {
+            description: body.description,
+            value: body.value
+        }})
+
+        res.sendStatus(200)
         
     } catch (error) {
         console.log(error)
