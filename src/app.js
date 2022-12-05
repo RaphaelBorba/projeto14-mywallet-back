@@ -12,6 +12,7 @@ app.use(recipesRouters)
 app.use(usersRouters)
 
 
+const port = process.env.PORT || 5000
 
-app.listen(5000, () => console.log('Server on 5000:'))
+app.listen(port, () => console.log(`Server on ${port}:`))
 
